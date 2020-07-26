@@ -1,0 +1,24 @@
+{
+  "name": "monitor-http",
+  "version": "1.0.0",
+  "description": "Monitor a web site to detect changes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheCodeSharman/monitor-http.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TheCodeSharman/monitor-http/issues"
+  },
+  "homepage": "https://github.com/TheCodeSharman/monitor-http#readme",
+  "dependencies": {
+    "grunt": "^1.2.1",
+    "node-fetch": "^2.6.0",
+    "npm": "^6.14.7"
+  }
+}
