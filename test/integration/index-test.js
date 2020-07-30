@@ -9,6 +9,8 @@ const UrlHash = require("../../url-hash/url-hash");
 chai.use(chaiAsPromised);
 chai.use(tdChai(td));
 
+const fs = require("fs");
+const path = require("path");
 
 let monitor, retrieveUrlHash, UrlHashStore;
 describe('monitor-http', function () {
@@ -23,20 +25,8 @@ describe('monitor-http', function () {
   describe('index', function () {
 
     it('should retrieve urls and store differences', function (done) {
-      const testEvent={
-          "id": "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
-          "detail-type": "Scheduled Event",
-          "source": "aws.events",
-          "account": "123456789012",
-          "time": "1970-01-01T00:00:00Z",
-          "region": "us-east-1",
-          "resources": [
-            "arn:aws:events:us-east-1:123456789012:rule/ExampleRule"
-          ],
-          "detail": {}
-        };
+      const testEvent=JSON.parse(fs.readFileSync(path.join(__dirname,"test_event.json")));
       const context = {};
-      
 
       // Url's that need to be checked
       const hashUrls = [ "BA", "DE", "HU", "MU"].map( areaCode =>{
@@ -67,7 +57,43 @@ describe('monitor-http', function () {
 
       monitor.handler(testEvent,context,callback);
       
+    });
+
+    it('should retrieve urls and store differences if the URL is new', function (done) {
+      const testEvent=JSON.parse(fs.readFileSync(path.join(__dirname,"test_event.json")));
+      const context = {};
+
+      // Url's that need to be checked
+      const hashUrls = [ "BA", "DE", "HU", "MU"].map( areaCode =>{
+          return  { 
+              areaCode: areaCode, 
+              urlHashNew: new UrlHash(`https://dink-ftp.sttas.com.au/3yp_${areaCode}.kmz`, 
+                    `content ${areaCode} new`, 1635834592740 )
+          }
+      });
+      hashUrls
+        .forEach( ({ areaCode, urlHashNew }) => {
+          td.when( retrieveUrlHash(urlHashNew.url) )
+            .thenResolve( urlHashNew );
+          td.when( UrlHashStore.prototype.getLatestHash(urlHashNew) )
+            .thenResolve();
+        }); 
+
+      function callback(error,success) {
+        if ( error ) {
+          done(error);
+        } else {
+          expect( UrlHashStore.prototype.writeHashes )
+            .to.have.been.calledWith( hashUrls.map( u => u.urlHashNew ) );
+          done();
+        }
+      }
+
+      monitor.handler(testEvent,context,callback);
+      
     })
   });
+
+  
 
 });

@@ -6,6 +6,7 @@ class UrlHashStore {
 
     // returns the latest hash for the given url
     getLatestHash(hash) {
+        console.log(`getLatestHash ${JSON.stringify(hash)}`);
         return this.docClient
             .query({
                 TableName: "URL_HASH",
@@ -18,12 +19,17 @@ class UrlHashStore {
                 ScanIndexForward: false,
                 Limit: 1})
             .promise()
-            .then( result => new UrlHash(result.Items[0]) );
+            .then( result => {
+                console.log(`found hash ${JSON.stringify(result)}`);
+                if ( result.Items.length >= 1 )
+                    return new UrlHash(result.Items[0]) 
+            });
 
     }
 
     // batch write the hashes to DynamoDb
     writeHashes(hashes) {
+        console.log(`writeHashes ${JSON.stringify(hashes)}`);
         if ( hashes.length === 0 ) return Promise.resolve();
         function putHash(hash) {
             return {

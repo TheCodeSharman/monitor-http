@@ -1,4 +1,6 @@
 const AWS = require("aws-sdk");
+const path = require("path");
+
 const UrlHashStore = require("./url-hash/url-hash-store");
 const retrieveUrlHash = require("./url-hash/url-hash-retriever");
 const diffUrlHashes = require("./url-hash/url-hash-diff");
@@ -11,7 +13,7 @@ function sttUrl(areaCode) {
 exports.handler = (event, context, callback) => {
     const docClient = new AWS.DynamoDB.DocumentClient({
         apiVersion: '2012-08-10',
-        credentials: new AWS.FileSystemCredentials(`${__dirname}/configuration.json`),
+        credentials: new AWS.FileSystemCredentials(path.join(__dirname,"configuration.json")),
         region: "us-east-1"
     });
     const hashStore = new UrlHashStore(docClient);

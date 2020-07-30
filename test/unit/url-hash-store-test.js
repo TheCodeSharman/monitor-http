@@ -22,7 +22,7 @@ function awsPromise(x) {
     return {
         promise() {
             return Promise.resolve({
-                Items: [ x ]
+                Items: x
             });
         }
     }
@@ -58,10 +58,29 @@ describe("UrlHashStore", function() {
                 Limit: 1
             };
             td.when( docClient.query(params) )
-                .thenReturn( awsPromise(returnedHash) );
+                .thenReturn( awsPromise([returnedHash]) );
             const store = new UrlHashStore(docClient);
             return expect( store.getLatestHash(hashes[0]) )
                 .to.eventually.deep.equal(new UrlHash(returnedHash) );
+        });
+
+        it("should return undefined if there is no latest URL", function() {
+            const params = {
+                TableName:"URL_HASH",
+                KeyConditions: {
+                    'url': {
+                        ComparisonOperator: "EQ",
+                        AttributeValueList: [ "https://example.com/one" ]
+                    }
+                },
+                ScanIndexForward: false,
+                Limit: 1
+            };
+            td.when( docClient.query(params) )
+                .thenReturn( awsPromise([]) );
+            const store = new UrlHashStore(docClient);
+            return expect( store.getLatestHash(hashes[0]) )
+                .to.eventually.be.undefined;
         });
 
     });
