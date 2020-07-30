@@ -1,0 +1,5 @@
+test
+dist
+configuration.sample.json
+dist-configuration.sample.json
+Gruntfile.js
