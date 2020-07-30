@@ -10,8 +10,8 @@ chai.use(chaiAsPromised);
 chai.use(tdChai(td));
 
 const AWS = require("aws-sdk");
-const UrlHash = require("../../src/url-hash");
-const UrlHashStore = require("../../src/url-hash-store");
+const UrlHash = require("../../url-hash/url-hash");
+const UrlHashStore = require("../../url-hash/url-hash-store");
 
 // AWS uses an API that in order to get a promise the promise() method is called
 // on the Reponse obejct to send the message and return a Promise object.

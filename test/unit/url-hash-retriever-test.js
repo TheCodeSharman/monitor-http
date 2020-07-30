@@ -4,7 +4,7 @@ const expect = chai.expect;
 const td = require("testdouble");
 const tdChai = require("testdouble-chai");
 const chaiAsPromised = require("chai-as-promised");
-const UrlHash = require("../../src/url-hash");
+const UrlHash = require("../../url-hash/url-hash");
 
 chai.use(chaiAsPromised);
 chai.use(tdChai(td));
@@ -13,7 +13,7 @@ let fetch, retrieveUrlHash, dateNowStub;
 describe("retrieveUrlHash", function() {
     beforeEach( function() {
         fetch = td.replace("node-fetch");
-        retrieveUrlHash = require("../../src/url-hash-retriever");
+        retrieveUrlHash = require("../../url-hash/url-hash-retriever");
         dateNowStub = td.function(Date.now);
         global.Date.now = dateNowStub;
     });

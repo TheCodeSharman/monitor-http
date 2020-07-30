@@ -1,7 +1,7 @@
 const AWS = require("aws-sdk");
-const UrlHashStore = require("./url-hash-store");
-const retrieveUrlHash = require("./url-hash-retriever");
-const diffUrlHashes = require("./url-hash-diff");
+const UrlHashStore = require("./url-hash/url-hash-store");
+const retrieveUrlHash = require("./url-hash/url-hash-retriever");
+const diffUrlHashes = require("./url-hash/url-hash-diff");
 const AREACODES = [ "BA", "DE", "HU", "MU"];
 
 function sttUrl(areaCode) {

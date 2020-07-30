@@ -1,6 +1,6 @@
 const chai = require("chai");
 const expect = chai.expect;
-const UrlHash = require("../../src/url-hash");
+const UrlHash = require("../../url-hash/url-hash");
 
 describe("UrlHash", function() {
 

@@ -9,9 +9,9 @@ const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 chai.use(tdChai(td));
 
-const UrlHash = require("../../src/url-hash");
-const UrlHashStore = require("../../src/url-hash-store");
-const diffUrlHashes = require("../../src/url-hash-diff");
+const UrlHash = require("../../url-hash/url-hash");
+const UrlHashStore = require("../../url-hash/url-hash-store");
+const diffUrlHashes = require("../../url-hash/url-hash-diff");
 
 describe("diffUrlHashes", function() {
     it("should only update URL's that have changed", function() {

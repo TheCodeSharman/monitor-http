@@ -4,7 +4,7 @@ const expect = chai.expect;
 const td = require("testdouble");
 const tdChai = require("testdouble-chai");
 const chaiAsPromised = require("chai-as-promised");
-const UrlHash = require("../../src/url-hash");
+const UrlHash = require("../../url-hash/url-hash");
 
 chai.use(chaiAsPromised);
 chai.use(tdChai(td));
@@ -13,9 +13,9 @@ chai.use(tdChai(td));
 let monitor, retrieveUrlHash, UrlHashStore;
 describe('monitor-http', function () {
   beforeEach( function() {
-    retrieveUrlHash = td.replace("../../src/url-hash-retriever");
-    UrlHashStore = td.replace("../../src/url-hash-store");
-    monitor = require("../../src/index");
+    retrieveUrlHash = td.replace("../../url-hash/url-hash-retriever");
+    UrlHashStore = td.replace("../../url-hash/url-hash-store");
+    monitor = require("../../index");
   });
   afterEach( function() {
     td.reset();
