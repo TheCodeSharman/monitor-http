@@ -24,8 +24,6 @@ describe("diffUrlHashes", function() {
 
         td.when(HashStore.prototype.getLatestHash(hashA)).thenResolve(hashA2);
         td.when(HashStore.prototype.getLatestHash(hashB)).thenResolve(hashB2);
-
-        td.when(HashStore.prototype.writeHashes(td.matchers.anything())).thenResolve();
   
         return expect( diffUrlHashes(new HashStore(),[hashA,hashB]) )
             .to.be.fulfilled.and.then((result)=>{

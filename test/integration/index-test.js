@@ -55,24 +55,19 @@ describe('monitor-http', function () {
             .thenResolve( urlHashOld );
         }); 
 
-      // Stub out store with expectations
-      td.when( UrlHashStore.prototype.writeHashes( hashUrls.map( u => u.urlHashNew ) ) )
-        .thenResolve();
-
       function callback(error,success) {
         if ( error ) {
           done(error);
         } else {
-          expect( UrlHashStore.prototype.writeHashes ).to.have.been.calledWith(
-            hashUrls.map( u => u.urlHashNew ) 
-          );
+          expect( UrlHashStore.prototype.writeHashes )
+            .to.have.been.calledWith( hashUrls.map( u => u.urlHashNew ) );
           done();
         }
       }
 
       monitor.handler(testEvent,context,callback);
       
-    }).timeout(10000);
+    })
   });
 
 });
