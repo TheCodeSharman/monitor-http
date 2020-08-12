@@ -9,12 +9,14 @@ function UrlHash( ) {
     if ( arguments.length === 1) {
         const obj = arguments[0];
         this.url = obj.url;
+        this.content = obj.content;
         this.hash = obj.hash;
         this.timestamp = obj.timestamp;
     } else {
         // construct a hash from the passed url, content and timestamp
         let [url, content, timestamp ] = arguments;
         this.url = url;
+        this.content = content;
         this.hash = hash(content);
         this.timestamp = timestamp;
     }
@@ -23,6 +25,7 @@ UrlHash.prototype.toJSON = function() {
     return {
         url: this.url,
         hash: this.hash,
+        content: this.content,
         timestamp: this.timestamp
     }
 }

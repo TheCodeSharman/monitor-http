@@ -44,6 +44,7 @@ describe("UrlHashStore", function() {
             const returnedHash = { 
                 url: "https://example.com/one", 
                 hash: "0f5f13cf0b14c88bd431ef163b63d68d", 
+                conent: "content one",
                 timestamp:1495834592740 
             };
             const params = {
@@ -94,6 +95,7 @@ describe("UrlHashStore", function() {
                             Item: {
                                 url: "https://example.com/one",
                                 hash: "87960ed2f2ed3561189d212214602e40",
+                                content: "content one",
                                 timestamp: 1595834592740
                             }
                         }
@@ -103,6 +105,7 @@ describe("UrlHashStore", function() {
                             Item: {
                                 url: "https://example.com/two",
                                 hash: "1d8344c389c16608b4b6cc4c00946e59",
+                                content: "content two",
                                 timestamp: 1295834592740
                             }
                         }

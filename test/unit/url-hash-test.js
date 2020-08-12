@@ -7,6 +7,7 @@ describe("UrlHash", function() {
     it("should create a new UrlHash", function() {
       const hash = new UrlHash( "http://example.com", "<html>some content</html>", 1595834592740 );
       expect( hash.url ).to.equal("http://example.com");
+      expect( hash.content ).to.equal("<html>some content</html>");
       expect( hash.hash ).to.equal("0bb3cdb16a1d6bc6e2c4d7bb16a7589e");
       expect( hash.timestamp ).to.equal(1595834592740);
     });
@@ -15,10 +16,12 @@ describe("UrlHash", function() {
       const hash = new UrlHash({
         url:"http://example.com", 
         hash: "0bb3cdb16a1d6bc6e2c4d7bb16a7589e", 
+        content: "<html>some content</html>",
         timestamp: 1595834592740
       });
       expect( hash.url ).to.equal("http://example.com");
       expect( hash.hash ).to.equal("0bb3cdb16a1d6bc6e2c4d7bb16a7589e");
+      expect( hash.content ).to.equal("<html>some content</html>");
       expect( hash.timestamp ).to.equal(1595834592740);
     });
 
@@ -27,6 +30,7 @@ describe("UrlHash", function() {
         const hashJson = {
           url:"http://example.com", 
           hash: "0bb3cdb16a1d6bc6e2c4d7bb16a7589e", 
+          content: "<html>some content</html>",
           timestamp: 1595834592740
         };
         const json = new UrlHash(hashJson).toJSON();
