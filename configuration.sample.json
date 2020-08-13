@@ -1,4 +1,13 @@
 {
-    "accessKeyId": "<secret>", 
-    "secretAccessKey": "<secret>"
+    "aws":{
+        "accessKeyId": "<secret>", 
+        "secretAccessKey": "<secret>",
+        "region": "us-east-1",
+        "s3_bucket": "stt.file.history",
+        "dynamodb_table": "URL_HASH"
+    },
+    "urls": [
+        "https://www.abc.net.au/news/",
+        "https://www.theguardian.com/au"
+    ]
 }

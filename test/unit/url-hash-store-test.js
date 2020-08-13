@@ -13,9 +13,6 @@ const UrlHashStore = require("../../url-hash/url-hash-store");
 chai.use(chaiAsPromised);
 chai.use(tdChai(td));
 
-
-
-
 // AWS uses an API that in order to get a promise the promise() method is called
 // on the Reponse obejct to send the message and return a Promise object.
 //
@@ -28,6 +25,15 @@ function awsPromise(x) {
         }
     }
 }
+
+function awsPromiseFail(error) {
+    return {
+        promise() {
+            return Promise.reject(error);
+        }
+    }
+}
+
 function awsPromiseWithItems(x) {
     return {
         promise() {
@@ -48,17 +54,16 @@ describe("UrlHashStore", function() {
             new UrlHash("https://example.com/one", Buffer.from("content one","utf8"), 1595834592740),
             new UrlHash("https://example.com/two", Buffer.from("content two","utf8"), 1295834592740)
         ];
-        store = new UrlHashStore(docClient,awsS3);
+        store = new UrlHashStore({
+                aws: {
+                    s3_bucket: "stt.file.history",
+                    dynamodb_table: "URL_HASH"
+                }
+            },docClient,awsS3);
     });
     describe("getLatestHash()", function() {
 
         it("should call query() to return latest url", function() {
-            const returnedHash = { 
-                url: "https://example.com/one", 
-                hash: "0f5f13cf0b14c88bd431ef163b63d68d", 
-                content: Buffer.from("content one","utf8"),
-                timestamp:1495834592740 
-            };
             const params = {
                 TableName:"URL_HASH",
                 KeyConditions: {
@@ -71,16 +76,25 @@ describe("UrlHashStore", function() {
                 Limit: 1
             };
             td.when( docClient.query(params) )
-                .thenReturn( awsPromiseWithItems([returnedHash]) );
+                .thenReturn( awsPromiseWithItems([{
+                    url: "https://example.com/one", 
+                    hash: "0f5f13cf0b14c88bd431ef163b63d68d", 
+                    timestamp:1495834592740 
+                }]) );
             td.when( awsS3.getObject({
                     Bucket: "stt.file.history",
-                    Key: "https://example.com/one"
+                    Key: `1495834592740_${encodeURIComponent("https://example.com/one")}`
                 })).thenReturn(awsPromise({
                     Body: Buffer.from("content one","utf8")
                 }));
 
             return expect( store.getLatestHash(hashes[0]) )
-                .to.eventually.deep.equal(new UrlHash(returnedHash) );
+                .to.eventually.deep.equal(new UrlHash({ 
+                    url: "https://example.com/one", 
+                    hash: "0f5f13cf0b14c88bd431ef163b63d68d", 
+                    content: Buffer.from("content one","utf8"),
+                    timestamp:1495834592740 
+                }) );
         });
 
         it("should return undefined if there is no latest URL", function() {
@@ -97,8 +111,43 @@ describe("UrlHashStore", function() {
             };
             td.when( docClient.query(params) )
                 .thenReturn( awsPromiseWithItems([]) );
+                td.when( awsS3.getObject({
+                    Bucket: "stt.file.history",
+                    Key: `1495834592740_${encodeURIComponent("https://example.com/one")}`
+                })).thenReturn(awsPromise({
+                    Body: Buffer.from("content one","utf8")
+                }));
             return expect( store.getLatestHash(hashes[0]) )
                 .to.eventually.be.undefined;
+        });
+
+        it("should not return content if there is previous content stored for this url", function() {
+            const params = {
+                TableName:"URL_HASH",
+                KeyConditions: {
+                    'url': {
+                        ComparisonOperator: "EQ",
+                        AttributeValueList: [ "https://example.com/one" ]
+                    }
+                },
+                ScanIndexForward: false,
+                Limit: 1
+            };
+            td.when( docClient.query(params) )
+                .thenReturn( awsPromiseWithItems([{ 
+                    url: "https://example.com/one", 
+                    hash: "0f5f13cf0b14c88bd431ef163b63d68d", 
+                    timestamp:1495834592740 
+                }]) );
+            td.when( awsS3.getObject({
+                    Bucket: "stt.file.history",
+                    Key: `1495834592740_${encodeURIComponent("https://example.com/one")}`
+                })).thenReturn(awsPromiseFail({
+                    code: "NoSuchKey"
+                }));
+
+            return expect( store.getLatestHash(hashes[0]) )
+                .to.eventually.not.have.property("content");
         });
 
     });
@@ -116,14 +165,14 @@ describe("UrlHashStore", function() {
                         .to.have.been.calledWith({
                             ACL: "private",
                             Bucket: "stt.file.history",
-                            Key: "https://example.com/one",
+                            Key: `1595834592740_${encodeURIComponent("https://example.com/one")}`,
                             Body: Buffer.from("content one","utf8")
                         });
                     expect(awsS3.upload)
                         .to.have.been.calledWith({
                             ACL: "private",
                             Bucket: "stt.file.history",
-                            Key: "https://example.com/two",
+                            Key: `1295834592740_${encodeURIComponent("https://example.com/two")}`,
                             Body: Buffer.from("content two","utf8")
                         });
 

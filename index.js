@@ -1,25 +1,32 @@
 const AWS = require("aws-sdk");
 const path = require("path");
+const fs = require("fs");
+
+const Configuration = JSON.parse( fs.readFileSync(path.join(__dirname,"configuration.json") ) );
+const AwsCredentials = new AWS.Credentials(Configuration.aws);
 
 const UrlHashStore = require("./url-hash/url-hash-store");
 const retrieveUrlHash = require("./url-hash/url-hash-retriever");
 const diffUrlHashes = require("./url-hash/url-hash-diff");
-const AREACODES = [ "BA", "DE", "HU", "MU"];
 
-function sttUrl(areaCode) {
-    return `https://dink-ftp.sttas.com.au/3yp_${areaCode}.kmz`;
-}
-
-exports.handler = (event, context, callback) => {
+function downloadUrlsAndStoreChanges( event, context, callback ) {
     const docClient = new AWS.DynamoDB.DocumentClient({
         apiVersion: '2012-08-10',
-        credentials: new AWS.FileSystemCredentials(path.join(__dirname,"configuration.json")),
-        region: "us-east-1"
+        credentials: AwsCredentials,
+        region: Configuration.aws.region
     });
-    const hashStore = new UrlHashStore(docClient);
+    const s3 = new AWS.S3({
+        apiVersion: '2006-03-01',
+        credentials: AwsCredentials,
+        region: Configuration.aws.region
+    });
+    const hashStore = new UrlHashStore(Configuration, docClient, s3);
     Promise.all( 
-        AREACODES.map( code => retrieveUrlHash(sttUrl(code)) ) 
-     ).then( (hashes) => diffUrlHashes(hashStore,hashes) )
+        Configuration.urls.map( url => retrieveUrlHash(url) ) 
+     ).then( (hashes) => 
+        diffUrlHashes(hashStore,hashes)  )
       .then( () => callback(null, "Finished") )
-      .catch( (error) => callback(error) );
-};
+      .catch( (error) => callback(error.stack) );
+}
+
+exports.handler = downloadUrlsAndStoreChanges;

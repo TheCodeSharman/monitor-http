@@ -4,6 +4,7 @@
   "description": "Monitor a web site to detect changes",
   "main": "index.js",
   "scripts": {
+    "start": "grunt lambda_invoke",
     "test": "mocha test/**/*.js"
   },
   "repository": {

@@ -17,7 +17,17 @@ describe('monitor-http', function () {
   beforeEach( function() {
     retrieveUrlHash = td.replace("../../url-hash/url-hash-retriever");
     UrlHashStore = td.replace("../../url-hash/url-hash-store");
+    fakeFs = td.replace("fs");
     monitor = require("../../index");
+    td.when(fakeFs.readFileSync(td.matchers.anything()))
+      .thenReturn({
+          urls: [
+            "https://dink-ftp.sttas.com.au/3yp_BA.kmz",
+            "https://dink-ftp.sttas.com.au/3yp_DE.kmz",
+            "https://dink-ftp.sttas.com.au/3yp_HU.kmz",
+            "https://dink-ftp.sttas.com.au/3yp_MU.kmz"
+          ]
+      });
   });
   afterEach( function() {
     td.reset();
