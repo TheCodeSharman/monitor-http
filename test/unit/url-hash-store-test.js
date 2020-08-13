@@ -6,12 +6,15 @@ const td = require("testdouble");
 const tdChai = require("testdouble-chai");
 const chaiAsPromised = require("chai-as-promised");
 
-chai.use(chaiAsPromised);
-chai.use(tdChai(td));
-
 const AWS = require("aws-sdk");
 const UrlHash = require("../../url-hash/url-hash");
 const UrlHashStore = require("../../url-hash/url-hash-store");
+
+chai.use(chaiAsPromised);
+chai.use(tdChai(td));
+
+
+
 
 // AWS uses an API that in order to get a promise the promise() method is called
 // on the Reponse obejct to send the message and return a Promise object.
@@ -19,6 +22,13 @@ const UrlHashStore = require("../../url-hash/url-hash-store");
 // In order to stub these API functions simply do:
 //    td.when(....).thenReturn( awsPromise(returnValue) )
 function awsPromise(x) {
+    return {
+        promise() {
+            return Promise.resolve(x);
+        }
+    }
+}
+function awsPromiseWithItems(x) {
     return {
         promise() {
             return Promise.resolve({
@@ -29,14 +39,16 @@ function awsPromise(x) {
 }
 
 describe("UrlHashStore", function() {
-    let hashes, docClient;
+    let hashes, docClient, awsS3, store;
     beforeEach(function() {
+        docClient = td.instance(AWS.DynamoDB.DocumentClient);
+        awsS3= td.instance(AWS.S3);
+        awsS3.getObject = td.function("getObject");
         hashes = [
-            new UrlHash("https://example.com/one", "content one", 1595834592740),
-            new UrlHash("https://example.com/two", "content two", 1295834592740)
+            new UrlHash("https://example.com/one", Buffer.from("content one","utf8"), 1595834592740),
+            new UrlHash("https://example.com/two", Buffer.from("content two","utf8"), 1295834592740)
         ];
-        const DocumentClientStub = td.constructor(AWS.DynamoDB.DocumentClient);
-        docClient = new DocumentClientStub();
+        store = new UrlHashStore(docClient,awsS3);
     });
     describe("getLatestHash()", function() {
 
@@ -44,7 +56,7 @@ describe("UrlHashStore", function() {
             const returnedHash = { 
                 url: "https://example.com/one", 
                 hash: "0f5f13cf0b14c88bd431ef163b63d68d", 
-                conent: "content one",
+                content: Buffer.from("content one","utf8"),
                 timestamp:1495834592740 
             };
             const params = {
@@ -59,8 +71,14 @@ describe("UrlHashStore", function() {
                 Limit: 1
             };
             td.when( docClient.query(params) )
-                .thenReturn( awsPromise([returnedHash]) );
-            const store = new UrlHashStore(docClient);
+                .thenReturn( awsPromiseWithItems([returnedHash]) );
+            td.when( awsS3.getObject({
+                    Bucket: "stt.file.history",
+                    Key: "https://example.com/one"
+                })).thenReturn(awsPromise({
+                    Body: Buffer.from("content one","utf8")
+                }));
+
             return expect( store.getLatestHash(hashes[0]) )
                 .to.eventually.deep.equal(new UrlHash(returnedHash) );
         });
@@ -78,8 +96,7 @@ describe("UrlHashStore", function() {
                 Limit: 1
             };
             td.when( docClient.query(params) )
-                .thenReturn( awsPromise([]) );
-            const store = new UrlHashStore(docClient);
+                .thenReturn( awsPromiseWithItems([]) );
             return expect( store.getLatestHash(hashes[0]) )
                 .to.eventually.be.undefined;
         });
@@ -87,6 +104,31 @@ describe("UrlHashStore", function() {
     });
 
     describe("writeHashes()", function() {
+        it("should call S3.upload with each hash", function() {
+            td.when( docClient.batchWrite(td.matchers.anything()) )
+                .thenReturn(awsPromise());
+            td.when( awsS3.upload(td.matchers.anything()))
+                .thenReturn(awsPromise());
+            return expect( store.writeHashes(hashes) )
+                .to.be.fulfilled
+                .then(() => {
+                    expect(awsS3.upload)
+                        .to.have.been.calledWith({
+                            ACL: "private",
+                            Bucket: "stt.file.history",
+                            Key: "https://example.com/one",
+                            Body: Buffer.from("content one","utf8")
+                        });
+                    expect(awsS3.upload)
+                        .to.have.been.calledWith({
+                            ACL: "private",
+                            Bucket: "stt.file.history",
+                            Key: "https://example.com/two",
+                            Body: Buffer.from("content two","utf8")
+                        });
+
+                });
+        });
         it("should call batchWrite() with each hash",function() {
             const params = {
                 RequestItems: {
@@ -95,7 +137,6 @@ describe("UrlHashStore", function() {
                             Item: {
                                 url: "https://example.com/one",
                                 hash: "87960ed2f2ed3561189d212214602e40",
-                                content: "content one",
                                 timestamp: 1595834592740
                             }
                         }
@@ -105,7 +146,6 @@ describe("UrlHashStore", function() {
                             Item: {
                                 url: "https://example.com/two",
                                 hash: "1d8344c389c16608b4b6cc4c00946e59",
-                                content: "content two",
                                 timestamp: 1295834592740
                             }
                         }
@@ -113,7 +153,8 @@ describe("UrlHashStore", function() {
                 }
             };
             td.when( docClient.batchWrite(params) ).thenReturn(awsPromise());
-            const store = new UrlHashStore(docClient);
+            td.when( awsS3.upload(td.matchers.anything()))
+                .thenReturn(awsPromise());
             return expect( store.writeHashes(hashes) )
                 .to.be.fulfilled
                 .then(() => expect(docClient.batchWrite)
@@ -124,7 +165,6 @@ describe("UrlHashStore", function() {
             td.when(
                 docClient.batchWrite(td.matchers.anything())
             ).thenReturn(awsPromise());
-            const store = new UrlHashStore(docClient);
             return expect( store.writeHashes([]) )
                 .to.be.fulfilled
                 .then(() => expect(docClient.batchWrite)
