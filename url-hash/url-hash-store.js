@@ -1,4 +1,5 @@
-const UrlHash = require("./url-hash")
+const UrlHash = require("./url-hash");
+const _ = require("lodash");
 
 // Since we go over the storage byte limit on DynamoDB we
 // need to store the content field elsewhere so here we
@@ -42,6 +43,26 @@ class UrlHashStore {
                         throw error;
                     }
               });
+    }
+
+    listHashes() {
+        return this.docClient.scan({
+                TableName: this.config.aws.dynamodb_table,
+            }).promise()
+              .then(result => _.map(result.Items, h => new UrlHash(h)));
+
+    }
+
+    getHashHistory(url) {
+        return this.docClient.scan({
+                TableName: this.config.aws.dynamodb_table,
+                FilterExpression: "#u = :url",
+                ExpressionAttributeNames: { '#u': 'url' },
+                ExpressionAttributeValues : {":url" : url}
+
+            }).promise()
+                .then(results => _.map(results.Items, h => new UrlHash(h)));
+
     }
 
     // returns the latest hash for the given url
@@ -100,11 +121,9 @@ class UrlHashStore {
                 hashes.map( h => 
                     this.storeContent( h )
                         .then( stripContentJson ) )
-            ).then( hs => {
-                this.docClient
+            ).then( hs => this.docClient
                     .batchWrite(buildWriteRequest(hs))
-                    .promise() 
-            });
+                    .promise() );
     }
 }
 module.exports = UrlHashStore;
