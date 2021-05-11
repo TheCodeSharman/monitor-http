@@ -20,7 +20,7 @@
   "dependencies": {
     "aws-sdk": "^2.723.0",
     "html-differ": "^1.4.0",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "moment": "^2.27.0",
     "node-fetch": "^2.6.0"
   },
