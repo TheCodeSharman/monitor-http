@@ -27,7 +27,7 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "grunt": "^1.2.1",
+    "grunt": "^1.5.2",
     "grunt-aws-lambda": "^0.13.0",
     "mocha": "^8.0.1",
     "testdouble": "^3.16.1",
