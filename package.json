@@ -22,7 +22,7 @@
     "html-differ": "^1.4.0",
     "lodash": "^4.17.20",
     "moment": "^2.27.0",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "chai": "^4.2.0",
