@@ -29,7 +29,7 @@
     "chai-as-promised": "^7.1.1",
     "grunt": "^1.2.1",
     "grunt-aws-lambda": "^0.13.0",
-    "mocha": "^8.0.1",
+    "mocha": "^8.4.0",
     "testdouble": "^3.16.1",
     "testdouble-chai": "^0.5.0"
   }
